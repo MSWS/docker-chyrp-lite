@@ -172,8 +172,8 @@ jobs:
         if: github.event_name != 'pull_request'  && needs.tag-does-not-exist.outputs.exists == 'false'
         with:
           registry: ghcr.io
-          username: ${{ env.LOWER_NAME }}
-          password: ${{ secrets.CR_PAT }}
+          username: ${{ github.actor  }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push
         uses: docker/build-push-action@v2.4.0
