@@ -178,6 +178,15 @@ jobs:
           username: ${{ secrets.QUAY_USERNAME }}
           password: ${{ secrets.QUAY_TOKEN }}
 
+      - name: Set image tag
+        run: |
+          REPO_NAME=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')
+          if [[ $GITHUB_REF_NAME == "main" ]]; then
+            echo "TAG=ghcr.io/$REPO_NAME:latest" >> $GITHUB_ENV
+          else
+            echo "TAG=ghcr.io/$REPO_NAME:$GITHUB_REF_NAME" >> $GITHUB_ENV
+          fi
+
       - name: Build and push
         uses: docker/build-push-action@v2.4.0
         with:
@@ -189,16 +198,7 @@ jobs:
             BUILD_DATE=${{ needs.prep.outputs.date }}
             VERSION=${{ needs.prep.outputs.version }}
             CHECKSUM=${{ needs.prep.outputs.checksum }}
-          tags: |
-            ${{ github.repository_owner }}/${{needs.prep.outputs.repo_name}}:latest
-            ${{ github.repository_owner }}/${{needs.prep.outputs.repo_name}}:${{needs.prep.outputs.tag}}
-            ${{ github.repository_owner }}/${{needs.prep.outputs.repo_name}}:version-${{needs.prep.outputs.version}}
-            ghcr.io/${{ github.repository_owner }}/${{needs.prep.outputs.repo_name}}:latest
-            ghcr.io/${{ github.repository_owner }}/${{needs.prep.outputs.repo_name}}:${{needs.prep.outputs.tag}}
-            ghcr.io/${{ github.repository_owner }}/${{needs.prep.outputs.repo_name}}:version-${{needs.prep.outputs.version}}
-            quay.io/${{ github.repository_owner }}/${{needs.prep.outputs.repo_name}}:latest
-            quay.io/${{ github.repository_owner }}/${{needs.prep.outputs.repo_name}}:${{needs.prep.outputs.tag}}
-            quay.io/${{ github.repository_owner }}/${{needs.prep.outputs.repo_name}}:version-${{needs.prep.outputs.version}}
+          tags: ${{ env.TAG }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-new
 
